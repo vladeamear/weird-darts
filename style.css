@@ -1,0 +1,67 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 1em;
+    
+    display: flex;
+    flex-direction: column;
+    justify-items: flex-start;
+    align-items: flex-start;
+
+    pointer-events: none;
+    user-select: none;
+}
+
+button {
+    appearance: none;
+    background: white;
+    color: black;
+    border: 2px solid brown;
+    padding: 0.5em;
+    font-size: 1.5em;
+    border-radius: 2em;
+    user-select: none;
+    pointer-events: auto;
+    align-self: center;
+}
+
+p {
+    font-size: 1.5em;
+    color: black;
+    font-family: monospace;
+    font-weight: 500;
+}
+
+.overlay-content {
+    flex-grow: 1;
+}
+
+#ar-instructions, #inline-instructions {
+    display: none;
+}
+
+body.inline #inline-instructions {
+    display: flex;
+    width: 100vw;
+    flex-direction: column;
+    gap: 20px;
+}
+
+
+
+body.playing #ar-instructions,
+body.ar-preparing #ar-instructions {
+    display: contents;
+}
+
+/* body.playing #go-button,  */
+body.playing #instructions {
+    visibility: hidden;
+}

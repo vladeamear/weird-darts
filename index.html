@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Basketglock Game</title>
+		<link rel="stylesheet" href="style.css">
+		<script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
+		<script src="ar-components.js"></script>
+		<!-- <script src="helpers.js"></script> -->
+		<script src="https://cdn.jsdelivr.net/gh/n5ro/aframe-physics-system@v4.0.1/dist/aframe-physics-system.min.js"></script>
+	</head>
+	<body class="inline">
+		<a-scene webxr="optionalFeatures: hit-test, dom-overlay; overlayElement:#overlay;" physics="debug: false">
+			<a-assets>
+				<a-asset-item
+					id="dictofon-model"
+					src="./assets/dictofon.gltf"
+				></a-asset-item>
+				<a-asset-item
+					id="glock-model"
+					src="./assets/glock.gltf"
+				></a-asset-item>
+			</a-assets>
+			<a-entity
+				gltf-model="#dictofon-model"
+				id="dictofon"
+				dynamic-body
+				scale="0.03 0.03 0.03" 
+				position="0.1 2.36 -1.5"
+			></a-entity>
+			<a-entity
+				gltf-model="#glock-model"
+				id="glock"
+				dynamic-body
+				scale="0.03 0.03 0.03" 
+				position="0.1 2.36 -1.5"
+			></a-entity>
+			<a-entity
+				id="target"
+				geometry="primitive: cylinder"
+				static-body
+				scale="0.09 0.02 0.09"
+				rotation="-90 0 0"
+				material="color: red"
+				hide-in-ar-mode
+			></a-entity>
+
+			<a-entity ar-hit-test="doHitTest:false" visible="false">
+				<a-plane
+					rotation="-90 0 0"
+					width="0.2"
+					height="0.2"
+					src="./arrow.png"
+					material="transparent:true;"
+				></a-plane>
+			</a-entity>
+			<a-camera>
+				<a-entity
+					id="text"
+					position="0 0 -0.17;"
+					visible="false"
+				>
+				</a-entity>
+			</a-camera>
+		</a-scene>
+		<div id="overlay" class="container">
+			<div id="ar-instructions">
+				<section class="overlay-content">
+					<p id="instructions">Разместите мишень на стене</p>
+				</section>
+				<!-- <section class="ingame-overlay">
+					<p id="timer"></p>
+				</section> -->
+				<div style="display: flex; justify-content: space-between; align-self: stretch;">
+					<button id="go-button">Готов к игре!</button>
+					<button id="exit-button">Остановить игру</button>
+				</div>
+			</div>
+			<div id="inline-instructions">
+				<h1 class="first screen">Добро пожаловать!</h1>
+				<p>У вас будет 20 секунд чтобы набрать максимальное количество очков!</p>
+				<p>Предыдущий результат:</p>
+				<p id="res-output"></p>
+			</div>
+		</div>
+		<script>
+			function getRandomColor() {
+				const letters = '0123456789ABCDEF';
+				let color = '#';
+				for (let i = 0; i < 6; i++) {
+					color += letters[Math.floor(Math.random() * 16)];
+				}
+				return color;
+			}
+			function getRandomInt(max) {
+				return Math.floor(Math.random() * max);
+			}
+
+			const reticle = document.querySelector("[ar-hit-test]");
+			const instructions = document.getElementById('instructions');
+			const inArTitle = document.getElementById('in-ar-title');
+			const button = document.getElementById('go-button');
+			const exit = document.getElementById('exit-button');
+			const upVector = new THREE.Vector3(0, 1, 0);
+			const tempVector = new THREE.Vector3();
+			const tempQuaternion = new THREE.Quaternion();
+			const scene = document.querySelector('a-scene');
+			const target = document.getElementById('target');
+			// const timer = document.getElementById('timer');
+			const resOutput = document.getElementById('res-output');
+
+			const possibleThrowAways = document.querySelectorAll('[gltf-model]');
+			let throwAway = possibleThrowAways[getRandomInt(possibleThrowAways.length - 1)];
+
+
+			function hasDomOverlay(session) {
+				if (!session.domOverlayState) {
+					// DOM Overlay is not supported
+					return false;
+				}
+
+				if (!session.domOverlayState.type) {
+					// DOM Overlay is not in use
+					return false;
+				}
+
+				return true;
+			}
+
+			function positionEnemy() {
+				target.setAttribute("position", reticle.getAttribute("position"));
+				target.setAttribute("visible", true);
+				tempVector.set(0, 0 ,-1);
+				tempVector.applyQuaternion(reticle.object3D.quaternion);
+				tempQuaternion.setFromUnitVectors(tempVector, upVector);
+				target.object3D.quaternion.multiplyQuaternions(tempQuaternion, reticle.object3D.quaternion);
+			};
+
+			let nOfCollisions = 0;
+
+			target.addEventListener('collide', (e) => {
+				const n = nOfCollisions++;
+				// const amount = Math.floor(n / 4);
+				target.setAttribute('material', `color: ${getRandomColor()}`);
+				// inArTitle.innerText = `${nickname} | ${amount}`;
+			})
+
+			exit.addEventListener('click', function () {
+				scene.xrSession.end();
+			});
+
+			scene.addEventListener("enter-vr", () => {
+				const domOverlay = hasDomOverlay(scene.xrSession);
+				document.getElementById('text').setAttribute('text', 'value', 'Overlay: ' + domOverlay);
+				document.body.classList.remove("inline");
+				if (scene.is("ar-mode")) {
+					document.body.classList.add("ar-preparing");
+					reticle.setAttribute('ar-hit-test', 'doHitTest:true');
+					reticle.setAttribute('visible', 'true');
+				} else {
+					document.body.classList.add("playing");
+					reticle.setAttribute('ar-hit-test', 'doHitTest:false');
+					reticle.setAttribute('visible', 'false');
+				}
+			});
+
+			scene.addEventListener("exit-vr", () => {
+				document.body.classList.add("inline");
+				document.body.classList.remove("playing");
+				document.body.classList.remove("ar-preparing");
+				reticle.setAttribute('ar-hit-test', 'doHitTest:false');
+				reticle.setAttribute('visible', 'false');
+			});
+
+			reticle.addEventListener('select', function (e) {
+				const domOverlay = hasDomOverlay(scene.xrSession);
+				if (document.body.classList.contains("playing")) {
+					const pose = e.detail.pose;
+					throwAway.body.position.copy(pose.transform.position);
+					tempVector.set(0, 0 ,-5);
+					tempVector.applyQuaternion(pose.transform.orientation);
+					throwAway.body.velocity.copy(tempVector);
+					return;
+				}
+
+				if (domOverlay) {
+					setTimeout(() => {
+						if (document.body.classList.contains("playing")) {
+							return;
+						} else {
+							positionEnemy();
+						}
+					}, 50);
+				} else {
+					if (document.body.classList.contains("playing")) {
+						return;
+					} else {
+						if (this.components["ar-hit-test"].hasFoundAPose) {
+							positionEnemy();
+							readyToStartPlay(e);
+						}
+					}
+				}
+			});
+
+			function readyToStartPlay(e) {
+				e.preventDefault();
+				if (target.getAttribute("visible") === false) {
+					positionEnemy();
+					button.disabled = true
+					const seconds = 20;
+					const timerInterval = setInterval(() => {
+						button.innerText = seconds;
+						seconds--
+					}, 1000);
+					setTimeout(() => {
+						clearInterval(timerInterval);
+						resOutput.innerText = Math.floor(nOfCollisions / 4);
+						scene.xrSession.end();
+					}, 20000);
+
+				}
+				if (document.body.classList.contains("ar-preparing")) {
+					document.body.classList.remove("ar-preparing");
+					document.body.classList.add("playing");
+					reticle.setAttribute('ar-hit-test', 'doHitTest:false');
+					reticle.setAttribute('visible', 'false');
+					return;
+				}
+			}
+
+			button.addEventListener('mousedown', readyToStartPlay);
+			button.addEventListener('touchstart', readyToStartPlay);
+		</script>
+	</body>
+</html>
