@@ -206,7 +206,6 @@
 					positionEnemy();
 					button.disabled = true
 					setTimeout(() => {
-						clearInterval(timerInterval);
 						resOutput.innerText = Math.floor(nOfCollisions / 4);
 						scene.xrSession.end();
 					}, 20000);
