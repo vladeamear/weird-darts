@@ -54,14 +54,12 @@ body.inline #inline-instructions {
     gap: 20px;
 }
 
-
-
 body.playing #ar-instructions,
 body.ar-preparing #ar-instructions {
     display: contents;
 }
 
-/* body.playing #go-button,  */
+body.playing #go-button, 
 body.playing #instructions {
     visibility: hidden;
 }
