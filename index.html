@@ -11,7 +11,7 @@
 		<a-scene
 			webxr="optionalFeatures: hit-test, dom-overlay; overlayElement:#overlay;"
 			physics="debug: false"
-			vr-mode-ui="enterARButton: #myEnterARButton"
+			vr-mode-ui="enterARButton: #myEnterARButton; enterARButton: none"
 		>
 
 			<a-assets>
@@ -83,7 +83,7 @@
 				<p>У вас будет 20 секунд чтобы набрать максимальное количество очков!</p>
 				<p>Предыдущий результат:</p>
 				<p id="res-output"></p>
-				<button id="myEnterARButton">ar</a>
+				<button id="myEnterARButton">В игру</a>
 			</div>
 		</div>
 		<script>
